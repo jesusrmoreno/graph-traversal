@@ -126,9 +126,12 @@ export default class Traversal {
   };
 
   run = () => {
+    // don't re-run the traversal if we've already been run
     if (this.spent) return this.results;
+
     let rvx = new Map();
     let rex = new Map();
+
     for (
       let current = this.startIterator;
       current !== null;
@@ -148,6 +151,9 @@ export default class Traversal {
           vx.forEach(v => rvx.set(v._id, v));
           ex.forEach(v => rex.set(v._id, v));
         }
+
+        // set the inputs to the next iterator to the results of this iterator
+        // basically creating a funnel
         next.setEdges(ex);
         next.setVertices(vx);
       }
@@ -174,16 +180,3 @@ export default class Traversal {
     return this.results;
   };
 }
-
-export const all = item => true;
-export const equals = (item, path, value) => get(item, path, null) === value;
-export const includes = (item, path, value) =>
-  get(item, path, "").includes(value);
-
-export const gt = (item, path, value) => get(item, path, null) > value;
-
-export const lt = (item, path, value) => get(item, path, null) < value;
-
-export const gte = (item, path, value) => get(item, path, null) <= value;
-
-export const lte = (item, path, value) => get(item, path, null) <= value;

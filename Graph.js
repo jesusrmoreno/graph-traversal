@@ -16,6 +16,16 @@ export default class Graph {
 
   vertexMap = new Map();
 
+  /**
+   * 
+   * @param {string[]} vertices list of ids
+   * @param {string[]} edges list of ids
+   * @param {object{ [string]: any }} props will be set under the properties key
+   * of the vertex 
+   * i.e. vertex.properties.blah
+   * @param {*} meta will be merged with the vertex
+   * i.e. vertex.blah
+   */
   constructor(vertices, edges, props, meta) {
     const [vx, ex] = this.createGraph(vertices, edges, props, meta);
     this.vx = vx;
@@ -28,6 +38,8 @@ export default class Graph {
     };
   }
 
+  // replace everything. this increases the revision number
+  // good for using in react hooks
   update = (vertices, edges, props, meta) => {
     const [vx, ex] = this.createGraph(vertices, edges, props, meta);
     this.vx = vx;
@@ -83,12 +95,14 @@ export default class Graph {
 
   getVertex = id => this.vertexMap[id] || null;
 
+  
   traversalResults = new Map();
 
   getGraph = () => {
     return [this.vx, this.ex];
   };
 
+  
   observeTraversal = (name, fn) => {
     const listeners = this.subscriptions.get(name) || new Set();
     listeners.add(fn);
@@ -98,16 +112,17 @@ export default class Graph {
 
   unobserveTraversal = (name, fn) => {
     const listeners = this.subscriptions.get(name) || new Set();
-
     listeners.delete(fn);
     this.subscriptions.set(name, listeners);
   };
 
-  calculateTraversal = (name, from) => {
+  calculateTraversal = (name) => {
     const traversal = this.traversalGenerators.get(name);
     if (traversal) {
       const subscriptions = this.subscriptions.get(name);
       if (subscriptions) {
+        // probably shouldn't create a new one each time...? 
+        // maybe check if the graph has actually changed via the revision
         const results = traversal(new Traversal(this.vx, this.ex)).subgraph();
         this.traversalResults.set(name, results);
         for (let fn of Array.from(subscriptions.values())) {
@@ -122,11 +137,9 @@ export default class Graph {
 
   calculate = () => {
     for (let name of Array.from(this.traversalGenerators.keys())) {
-      this.calculateTraversal(name, "calc");
+      this.calculateTraversal(name);
     }
   };
-
-  traverse = () => this.traversal();
 
   traversal = () => new Traversal(this.vx, this.ex);
 
